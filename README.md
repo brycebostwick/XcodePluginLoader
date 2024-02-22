@@ -2,7 +2,7 @@
 
 Add plugin support back to Xcode 14+!
 
-`XcodePluginLoader` is a lightweight drop-in, replacement for Xcode's built-in plugin system, which was removed in [Xcode 14.0b3](https://github.com/XVimProject/XVim2/issues/398).
+`XcodePluginLoader` is a lightweight, drop-in replacement for Xcode's built-in plugin system, which was removed in [Xcode 14.0b3](https://github.com/XVimProject/XVim2/issues/398).
 
 It allows for loading the same plugin bundles that worked in older versions of Xcode.
 
