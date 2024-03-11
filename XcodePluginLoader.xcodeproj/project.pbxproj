@@ -23,6 +23,7 @@
 		020463A72B7535A000BF01DB /* ClassLoadObserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ClassLoadObserver.h; sourceTree = "<group>"; };
 		020463A82B7535A000BF01DB /* ClassLoadObserver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ClassLoadObserver.m; sourceTree = "<group>"; };
 		020463AB2B753EF800BF01DB /* DVTPlugInManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVTPlugInManager.h; sourceTree = "<group>"; };
+		02AE2E362B9F46F4006AF5FD /* NSProcessInfo+PBXTSPlatformAdditions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSProcessInfo+PBXTSPlatformAdditions.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				020463AB2B753EF800BF01DB /* DVTPlugInManager.h */,
+				02AE2E362B9F46F4006AF5FD /* NSProcessInfo+PBXTSPlatformAdditions.h */,
 				020463A62B75355700BF01DB /* XcodePlugin.h */,
 			);
 			path = XcodeHeaders;

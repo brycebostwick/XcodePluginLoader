@@ -6,6 +6,7 @@
 
 #import "ClassLoadObserver.h"
 #import "XcodeHeaders/DVTPlugInManager.h"
+#import "NSProcessInfo+PBXTSPlatformAdditions.h"
 #import "XcodeHeaders/XcodePlugin.h"
 
 /**
@@ -24,9 +25,12 @@ NSString * __nonnull  const pluginDirectory = @"~/Library/Application Support/De
 - (void)start {
     NSLog(@"[XcodePluginLoader] Waiting for required classes to load");
 
-    // Wait for `DVTPlugInManager` to load before performing actual plugin loading
+    // Wait for classes to load before performing actual plugin loading
     __weak typeof(self) weakSelf = self;
-    self.classLoadObserver = [ClassLoadObserver observerForClasses:@[@"DVTPlugInManager"] completion:^{
+    self.classLoadObserver = [ClassLoadObserver observerForClasses:@[
+        @"PBXTSTask", // Needed for Xcode 15.3+ compatibility checks (as a proxy for NSProcessInfo(PBXTSPlatformAdditions) being loaded)
+        @"DVTPlugInManager" // Needed for pre Xcode 15.3 compatibility checks
+    ] completion:^{
         [weakSelf loadPlugins];
     }];
 }
@@ -73,36 +77,29 @@ NSString * __nonnull  const pluginDirectory = @"~/Library/Application Support/De
             return;
         }
 
-        // Run compatibility check using `DTXcodeBuildCompatibleVersions` (needed for Xcode 15.3+)
-        NSString *xcodeBuildVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"DTXcodeBuild"];
-        NSArray<NSString *> *compatibleBuildVersions = [bundle objectForInfoDictionaryKey:@"DTXcodeBuildCompatibleVersions"];
+        // Run compatibility check using `ProductBuildVersion` (needed for Xcode 15.3+).
+        // Start by getting Xcode's `ProductBuildVersion`
+        NSProcessInfo *processInfo = [NSProcessInfo processInfo];
+        NSString *xcodeBuildVersion;
+        if ([processInfo respondsToSelector:@selector(xcodeProductBuildVersion)]) {
+            xcodeBuildVersion = [[NSProcessInfo processInfo] xcodeProductBuildVersion];
+        }
+
+        // Then get all `CompatibleProductBuildVersions` values from the plugin and compare
+        NSArray<NSString *> *compatibleBuildVersions = [bundle objectForInfoDictionaryKey:@"CompatibleProductBuildVersions"];
         BOOL hasCompatibleBuildVersion = NO;
-        if (compatibleBuildVersions) {
+        if (xcodeBuildVersion && compatibleBuildVersions) {
             if (![compatibleBuildVersions isKindOfClass:[NSArray class]]) {
-                NSLog(@"[XcodePluginLoader] Skipping %@ (invalid DTXcodeBuildCompatibleVersions format)", potentialBundleName);
+                NSLog(@"[XcodePluginLoader] Skipping %@ (invalid CompatibleProductBuildVersions format)", potentialBundleName);
                 return;
             }
 
-            compatibleBuildVersions = [compatibleBuildVersions sortedArrayUsingSelector:@selector(length)];
+            // Check for a match
             for (NSString *buildVersion in compatibleBuildVersions) {
-                if ([xcodeBuildVersion isEqualToString:buildVersion]) {
+                if ([buildVersion isEqualToString:xcodeBuildVersion]) {
                     hasCompatibleBuildVersion = YES;
-                    NSLog(@"[XcodePluginLoader] %@ is compatible with DTXcodeBuild version %@", potentialBundleName, xcodeBuildVersion);
+                    NSLog(@"[XcodePluginLoader] %@ is compatible with ProductBuildVersion version %@", potentialBundleName, xcodeBuildVersion);
                     break;
-                }
-
-                // Apple sometimes releases multiple builds of Xcode using the same version number
-                // (e.g., some people will have Xcode 13.3b1 with a build number of "15E5178i", others
-                // may have "15E5178b"). Treat the lowercase suffix as optional
-                if ([xcodeBuildVersion hasPrefix:buildVersion]) {
-                    NSString *unmatchedBuildVersionString = [xcodeBuildVersion substringFromIndex:[buildVersion length]];
-                    NSCharacterSet *nonLowercaseLetters = [[NSCharacterSet lowercaseLetterCharacterSet] invertedSet];
-                    NSRange rangeOfNonLowercaseLetters = [unmatchedBuildVersionString rangeOfCharacterFromSet:nonLowercaseLetters];
-                    if (rangeOfNonLowercaseLetters.location == NSNotFound) {
-                        hasCompatibleBuildVersion = YES;
-                        NSLog(@"[XcodePluginLoader] %@ is compatible because Xcode has a more-specific DTXcodeBuild version (Xcode version %@, compatible version: %@)", potentialBundleName, xcodeBuildVersion, buildVersion);
-                        break;
-                    }
                 }
             }
         }
@@ -110,7 +107,7 @@ NSString * __nonnull  const pluginDirectory = @"~/Library/Application Support/De
         // Fall back to doing a compatibility check using `DVTPlugInCompatibilityUUIDs`
         // (matches Xcode's original plugin loader behavior, but is only available on Xcode 15.2 or older)
         if (!hasCompatibleBuildVersion) {
-            NSLog(@"[XcodePluginLoader] No DTXcodeBuildCompatibleVersions in %@ matching version %@. Falling back to DVTPlugInCompatibilityUUIDs", potentialBundleName, xcodeBuildVersion);
+            NSLog(@"[XcodePluginLoader] No CompatibleProductBuildVersions in %@ matching version %@. Falling back to DVTPlugInCompatibilityUUIDs", potentialBundleName, xcodeBuildVersion);
 
             // Read the list of compatibility UUIDs specified by the plugin that we're loading
             NSArray<NSString *> *compatibilityUUIDs = [bundle objectForInfoDictionaryKey:@"DVTPlugInCompatibilityUUIDs"];
