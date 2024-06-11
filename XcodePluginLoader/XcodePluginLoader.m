@@ -28,7 +28,7 @@ NSString * __nonnull  const pluginDirectory = @"~/Library/Application Support/De
     // Wait for classes to load before performing actual plugin loading
     __weak typeof(self) weakSelf = self;
     self.classLoadObserver = [ClassLoadObserver observerForClasses:@[
-        @"PBXTSTask", // Needed for Xcode 15.3+ compatibility checks (as a proxy for NSProcessInfo(PBXTSPlatformAdditions) being loaded)
+        @"TSFileManager", // Needed for Xcode 15.3+ compatibility checks (as a proxy for NSProcessInfo(PBXTSPlatformAdditions) being loaded)
         @"DVTPlugInManager" // Needed for pre Xcode 15.3 compatibility checks
     ] completion:^{
         [weakSelf loadPlugins];

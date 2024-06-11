@@ -1,6 +1,6 @@
 # XcodePluginLoader
 
-Add plugin support back to Xcode 14+!
+Add plugin support back to Xcode 14+! Tested on Xcode 14.0 - Xcode 16.0b1.
 
 `XcodePluginLoader` is a lightweight, drop-in replacement for Xcode's built-in plugin system, which was removed in [Xcode 14.0b3](https://github.com/XVimProject/XVim2/issues/398).
 
@@ -18,7 +18,7 @@ A much deeper dive is available on [bryce.co](https://bryce.co/xcode-plugin-load
 
 1) [Re-Sign Xcode](https://github.com/XVimProject/XVim2/blob/master/SIGNING_Xcode.md) (the same process you already had to in order to use plugins from Xcode 8 - Xcode 13)
 
-(Note: this limits some functionality within Xcode. Consider keeping a signed copy of Xcode around as well. You can alternatively disable SIP at the expense of security)
+(Note: this limits some functionality within Xcode, including AI-based code completion, Swift previews, and account management. Consider keeping a signed copy of Xcode around as well. You can alternatively disable SIP at the expense of security)
 
 2. Build or download the latest release of `XcodePluginLoader`
 3. Copy `XcodePluginLoader.dylib` into `Xcode.app/Contents`
